@@ -16,6 +16,9 @@ html,body{margin:0;max-width:100%;overflow-x:hidden;word-break:break-word;backgr
 header{padding:14px 16px 10px;background:#fff;border-bottom:1px solid var(--line)}
 h1{margin:0;font-size:19px;line-height:1.3}
 .sub{margin:4px 0 0;color:var(--sub);font-size:13px}
+.search{margin-top:10px}
+.search input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#f9fafb;font-size:15px;font-family:inherit;color:var(--txt);outline:none;-webkit-appearance:none}
+.search input:focus{border-color:#9ca3af;background:#fff}
 #map{height:52vh;min-height:300px;background:#e8eaed}
 #map .fallback{display:flex;align-items:center;justify-content:center;height:100%;color:var(--sub);font-size:14px;padding:20px;text-align:center}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:10px 12px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:500}
@@ -60,6 +63,7 @@ footer{padding:0 16px 30px;color:var(--sub);font-size:12px;line-height:1.7}
 <header>
   <h1>双和公园周边三甲医院</h1>
   <p class="sub">先筛有儿童口腔科或有儿保科，按驾车时间排序。点号码拨打，长按复制。</p>
+  <div class="search"><input id="q" type="search" autocomplete="off" placeholder="搜索医院名、科室或地址"></div>
 </header>
 <div id="map"></div>
 <div class="chips" id="chips">
@@ -73,1328 +77,667 @@ footer{padding:0 16px 30px;color:var(--sub);font-size:12px;line-height:1.7}
   <div>距离为路网测算。时间为按广州城区实际路况估算：平峰约 30 km/h、早高峰约 20 km/h，不是导航的理论最短时间，出门前看实时路况。</div>
   <div>数据来源：广州市卫健委医疗机构检索平台、各医院官网；核对时间 2026-11-04。出诊与接诊范围会变，以电话核实为准。</div>
 </footer>
-<style id="leaflet-css">/* required styles */
-
-
-
-.leaflet-pane,
-
-.leaflet-tile,
-
-.leaflet-marker-icon,
-
-.leaflet-marker-shadow,
-
-.leaflet-tile-container,
-
-.leaflet-pane > svg,
-
-.leaflet-pane > canvas,
-
-.leaflet-zoom-box,
-
-.leaflet-image-layer,
-
-.leaflet-layer {
-
-	position: absolute;
-
-	left: 0;
-
-	top: 0;
-
-	}
-
-.leaflet-container {
-
-	overflow: hidden;
-
-	}
-
-.leaflet-tile,
-
-.leaflet-marker-icon,
-
-.leaflet-marker-shadow {
-
-	-webkit-user-select: none;
-
-	   -moz-user-select: none;
-
-	        user-select: none;
-
-	  -webkit-user-drag: none;
-
-	}
-
-/* Prevents IE11 from highlighting tiles in blue */
-
-.leaflet-tile::selection {
-
-	background: transparent;
-
-}
-
-/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
-
-.leaflet-safari .leaflet-tile {
-
-	image-rendering: -webkit-optimize-contrast;
-
-	}
-
-/* hack that prevents hw layers "stretching" when loading new tiles */
-
-.leaflet-safari .leaflet-tile-container {
-
-	width: 1600px;
-
-	height: 1600px;
-
-	-webkit-transform-origin: 0 0;
-
-	}
-
-.leaflet-marker-icon,
-
-.leaflet-marker-shadow {
-
-	display: block;
-
-	}
-
-/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
-
-/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
-
-.leaflet-container .leaflet-overlay-pane svg {
-
-	max-width: none !important;
-
-	max-height: none !important;
-
-	}
-
-.leaflet-container .leaflet-marker-pane img,
-
-.leaflet-container .leaflet-shadow-pane img,
-
-.leaflet-container .leaflet-tile-pane img,
-
-.leaflet-container img.leaflet-image-layer,
-
-.leaflet-container .leaflet-tile {
-
-	max-width: none !important;
-
-	max-height: none !important;
-
-	width: auto;
-
-	padding: 0;
-
-	}
-
-
-
-.leaflet-container img.leaflet-tile {
-
-	/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
-
-	mix-blend-mode: plus-lighter;
-
-}
-
-
-
-.leaflet-container.leaflet-touch-zoom {
-
-	-ms-touch-action: pan-x pan-y;
-
-	touch-action: pan-x pan-y;
-
-	}
-
-.leaflet-container.leaflet-touch-drag {
-
-	-ms-touch-action: pinch-zoom;
-
-	/* Fallback for FF which doesn't support pinch-zoom */
-
-	touch-action: none;
-
-	touch-action: pinch-zoom;
-
-}
-
-.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
-
-	-ms-touch-action: none;
-
-	touch-action: none;
-
-}
-
-.leaflet-container {
-
-	-webkit-tap-highlight-color: transparent;
-
-}
-
-.leaflet-container a {
-
-	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
-
-}
-
-.leaflet-tile {
-
-	filter: inherit;
-
-	visibility: hidden;
-
-	}
-
-.leaflet-tile-loaded {
-
-	visibility: inherit;
-
-	}
-
-.leaflet-zoom-box {
-
-	width: 0;
-
-	height: 0;
-
-	-moz-box-sizing: border-box;
-
-	     box-sizing: border-box;
-
-	z-index: 800;
-
-	}
-
-/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
-
-.leaflet-overlay-pane svg {
-
-	-moz-user-select: none;
-
-	}
-
-
-
-.leaflet-pane         { z-index: 400; }
-
-
-
-.leaflet-tile-pane    { z-index: 200; }
-
-.leaflet-overlay-pane { z-index: 400; }
-
-.leaflet-shadow-pane  { z-index: 500; }
-
-.leaflet-marker-pane  { z-index: 600; }
-
-.leaflet-tooltip-pane   { z-index: 650; }
-
-.leaflet-popup-pane   { z-index: 700; }
-
-
-
-.leaflet-map-pane canvas { z-index: 100; }
-
-.leaflet-map-pane svg    { z-index: 200; }
-
-
-
-.leaflet-vml-shape {
-
-	width: 1px;
-
-	height: 1px;
-
-	}
-
-.lvml {
-
-	behavior: url(#default#VML);
-
-	display: inline-block;
-
-	position: absolute;
-
-	}
-
-
-
-
-
-/* control positioning */
-
-
-
-.leaflet-control {
-
-	position: relative;
-
-	z-index: 800;
-
-	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
-
-	pointer-events: auto;
-
-	}
-
-.leaflet-top,
-
-.leaflet-bottom {
-
-	position: absolute;
-
-	z-index: 1000;
-
-	pointer-events: none;
-
-	}
-
-.leaflet-top {
-
-	top: 0;
-
-	}
-
-.leaflet-right {
-
-	right: 0;
-
-	}
-
-.leaflet-bottom {
-
-	bottom: 0;
-
-	}
-
-.leaflet-left {
-
-	left: 0;
-
-	}
-
-.leaflet-control {
-
-	float: left;
-
-	clear: both;
-
-	}
-
-.leaflet-right .leaflet-control {
-
-	float: right;
-
-	}
-
-.leaflet-top .leaflet-control {
-
-	margin-top: 10px;
-
-	}
-
-.leaflet-bottom .leaflet-control {
-
-	margin-bottom: 10px;
-
-	}
-
-.leaflet-left .leaflet-control {
-
-	margin-left: 10px;
-
-	}
-
-.leaflet-right .leaflet-control {
-
-	margin-right: 10px;
-
-	}
-
-
-
-
-
-/* zoom and fade animations */
-
-
-
-.leaflet-fade-anim .leaflet-popup {
-
-	opacity: 0;
-
-	-webkit-transition: opacity 0.2s linear;
-
-	   -moz-transition: opacity 0.2s linear;
-
-	        transition: opacity 0.2s linear;
-
-	}
-
-.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
-
-	opacity: 1;
-
-	}
-
-.leaflet-zoom-animated {
-
-	-webkit-transform-origin: 0 0;
-
-	    -ms-transform-origin: 0 0;
-
-	        transform-origin: 0 0;
-
-	}
-
-svg.leaflet-zoom-animated {
-
-	will-change: transform;
-
-}
-
-
-
-.leaflet-zoom-anim .leaflet-zoom-animated {
-
-	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
-
-	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
-
-	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
-
-	}
-
-.leaflet-zoom-anim .leaflet-tile,
-
-.leaflet-pan-anim .leaflet-tile {
-
-	-webkit-transition: none;
-
-	   -moz-transition: none;
-
-	        transition: none;
-
-	}
-
-
-
-.leaflet-zoom-anim .leaflet-zoom-hide {
-
-	visibility: hidden;
-
-	}
-
-
-
-
-
-/* cursors */
-
-
-
-.leaflet-interactive {
-
-	cursor: pointer;
-
-	}
-
-.leaflet-grab {
-
-	cursor: -webkit-grab;
-
-	cursor:    -moz-grab;
-
-	cursor:         grab;
-
-	}
-
-.leaflet-crosshair,
-
-.leaflet-crosshair .leaflet-interactive {
-
-	cursor: crosshair;
-
-	}
-
-.leaflet-popup-pane,
-
-.leaflet-control {
-
-	cursor: auto;
-
-	}
-
-.leaflet-dragging .leaflet-grab,
-
-.leaflet-dragging .leaflet-grab .leaflet-interactive,
-
-.leaflet-dragging .leaflet-marker-draggable {
-
-	cursor: move;
-
-	cursor: -webkit-grabbing;
-
-	cursor:    -moz-grabbing;
-
-	cursor:         grabbing;
-
-	}
-
-
-
-/* marker & overlays interactivity */
-
-.leaflet-marker-icon,
-
-.leaflet-marker-shadow,
-
-.leaflet-image-layer,
-
-.leaflet-pane > svg path,
-
-.leaflet-tile-container {
-
-	pointer-events: none;
-
-	}
-
-
-
-.leaflet-marker-icon.leaflet-interactive,
-
-.leaflet-image-layer.leaflet-interactive,
-
-.leaflet-pane > svg path.leaflet-interactive,
-
-svg.leaflet-image-layer.leaflet-interactive path {
-
-	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
-
-	pointer-events: auto;
-
-	}
-
-
-
-/* visual tweaks */
-
-
-
-.leaflet-container {
-
-	background: #ddd;
-
-	outline-offset: 1px;
-
-	}
-
-.leaflet-container a {
-
-	color: #0078A8;
-
-	}
-
-.leaflet-zoom-box {
-
-	border: 2px dotted #38f;
-
-	background: rgba(255,255,255,0.5);
-
-	}
-
-
-
-
-
-/* general typography */
-
-.leaflet-container {
-
-	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
-
-	font-size: 12px;
-
-	font-size: 0.75rem;
-
-	line-height: 1.5;
-
-	}
-
-
-
-
-
-/* general toolbar styles */
-
-
-
-.leaflet-bar {
-
-	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-
-	border-radius: 4px;
-
-	}
-
-.leaflet-bar a {
-
-	background-color: #fff;
-
-	border-bottom: 1px solid #ccc;
-
-	width: 26px;
-
-	height: 26px;
-
-	line-height: 26px;
-
-	display: block;
-
-	text-align: center;
-
-	text-decoration: none;
-
-	color: black;
-
-	}
-
-.leaflet-bar a,
-
-.leaflet-control-layers-toggle {
-
-	background-position: 50% 50%;
-
-	background-repeat: no-repeat;
-
-	display: block;
-
-	}
-
-.leaflet-bar a:hover,
-
-.leaflet-bar a:focus {
-
-	background-color: #f4f4f4;
-
-	}
-
-.leaflet-bar a:first-child {
-
-	border-top-left-radius: 4px;
-
-	border-top-right-radius: 4px;
-
-	}
-
-.leaflet-bar a:last-child {
-
-	border-bottom-left-radius: 4px;
-
-	border-bottom-right-radius: 4px;
-
-	border-bottom: none;
-
-	}
-
-.leaflet-bar a.leaflet-disabled {
-
-	cursor: default;
-
-	background-color: #f4f4f4;
-
-	color: #bbb;
-
-	}
-
-
-
-.leaflet-touch .leaflet-bar a {
-
-	width: 30px;
-
-	height: 30px;
-
-	line-height: 30px;
-
-	}
-
-.leaflet-touch .leaflet-bar a:first-child {
-
-	border-top-left-radius: 2px;
-
-	border-top-right-radius: 2px;
-
-	}
-
-.leaflet-touch .leaflet-bar a:last-child {
-
-	border-bottom-left-radius: 2px;
-
-	border-bottom-right-radius: 2px;
-
-	}
-
-
-
-/* zoom control */
-
-
-
-.leaflet-control-zoom-in,
-
-.leaflet-control-zoom-out {
-
-	font: bold 18px 'Lucida Console', Monaco, monospace;
-
-	text-indent: 1px;
-
-	}
-
-
-
-.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
-
-	font-size: 22px;
-
-	}
-
-
-
-
-
-/* layers control */
-
-
-
-.leaflet-control-layers {
-
-	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-
-	background: #fff;
-
-	border-radius: 5px;
-
-	}
-
-.leaflet-control-layers-toggle {
-
-	background-image: url(images/layers.png);
-
-	width: 36px;
-
-	height: 36px;
-
-	}
-
-.leaflet-retina .leaflet-control-layers-toggle {
-
-	background-image: url(images/layers-2x.png);
-
-	background-size: 26px 26px;
-
-	}
-
-.leaflet-touch .leaflet-control-layers-toggle {
-
-	width: 44px;
-
-	height: 44px;
-
-	}
-
-.leaflet-control-layers .leaflet-control-layers-list,
-
-.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
-
-	display: none;
-
-	}
-
-.leaflet-control-layers-expanded .leaflet-control-layers-list {
-
-	display: block;
-
-	position: relative;
-
-	}
-
-.leaflet-control-layers-expanded {
-
-	padding: 6px 10px 6px 6px;
-
-	color: #333;
-
-	background: #fff;
-
-	}
-
-.leaflet-control-layers-scrollbar {
-
-	overflow-y: scroll;
-
-	overflow-x: hidden;
-
-	padding-right: 5px;
-
-	}
-
-.leaflet-control-layers-selector {
-
-	margin-top: 2px;
-
-	position: relative;
-
-	top: 1px;
-
-	}
-
-.leaflet-control-layers label {
-
-	display: block;
-
-	font-size: 13px;
-
-	font-size: 1.08333em;
-
-	}
-
-.leaflet-control-layers-separator {
-
-	height: 0;
-
-	border-top: 1px solid #ddd;
-
-	margin: 5px -10px 5px -6px;
-
-	}
-
-
-
-/* Default icon URLs */
-
-.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
-
-	background-image: url(images/marker-icon.png);
-
-	}
-
-
-
-
-
-/* attribution and scale controls */
-
-
-
-.leaflet-container .leaflet-control-attribution {
-
-	background: #fff;
-
-	background: rgba(255, 255, 255, 0.8);
-
-	margin: 0;
-
-	}
-
-.leaflet-control-attribution,
-
-.leaflet-control-scale-line {
-
-	padding: 0 5px;
-
-	color: #333;
-
-	line-height: 1.4;
-
-	}
-
-.leaflet-control-attribution a {
-
-	text-decoration: none;
-
-	}
-
-.leaflet-control-attribution a:hover,
-
-.leaflet-control-attribution a:focus {
-
-	text-decoration: underline;
-
-	}
-
-.leaflet-attribution-flag {
-
-	display: inline !important;
-
-	vertical-align: baseline !important;
-
-	width: 1em;
-
-	height: 0.6669em;
-
-	}
-
-.leaflet-left .leaflet-control-scale {
-
-	margin-left: 5px;
-
-	}
-
-.leaflet-bottom .leaflet-control-scale {
-
-	margin-bottom: 5px;
-
-	}
-
-.leaflet-control-scale-line {
-
-	border: 2px solid #777;
-
-	border-top: none;
-
-	line-height: 1.1;
-
-	padding: 2px 5px 1px;
-
-	white-space: nowrap;
-
-	-moz-box-sizing: border-box;
-
-	     box-sizing: border-box;
-
-	background: rgba(255, 255, 255, 0.8);
-
-	text-shadow: 1px 1px #fff;
-
-	}
-
-.leaflet-control-scale-line:not(:first-child) {
-
-	border-top: 2px solid #777;
-
-	border-bottom: none;
-
-	margin-top: -2px;
-
-	}
-
-.leaflet-control-scale-line:not(:first-child):not(:last-child) {
-
-	border-bottom: 2px solid #777;
-
-	}
-
-
-
-.leaflet-touch .leaflet-control-attribution,
-
-.leaflet-touch .leaflet-control-layers,
-
-.leaflet-touch .leaflet-bar {
-
-	box-shadow: none;
-
-	}
-
-.leaflet-touch .leaflet-control-layers,
-
-.leaflet-touch .leaflet-bar {
-
-	border: 2px solid rgba(0,0,0,0.2);
-
-	background-clip: padding-box;
-
-	}
-
-
-
-
-
-/* popup */
-
-
-
-.leaflet-popup {
-
-	position: absolute;
-
-	text-align: center;
-
-	margin-bottom: 20px;
-
-	}
-
-.leaflet-popup-content-wrapper {
-
-	padding: 1px;
-
-	text-align: left;
-
-	border-radius: 12px;
-
-	}
-
-.leaflet-popup-content {
-
-	margin: 13px 24px 13px 20px;
-
-	line-height: 1.3;
-
-	font-size: 13px;
-
-	font-size: 1.08333em;
-
-	min-height: 1px;
-
-	}
-
-.leaflet-popup-content p {
-
-	margin: 17px 0;
-
-	margin: 1.3em 0;
-
-	}
-
-.leaflet-popup-tip-container {
-
-	width: 40px;
-
-	height: 20px;
-
-	position: absolute;
-
-	left: 50%;
-
-	margin-top: -1px;
-
-	margin-left: -20px;
-
-	overflow: hidden;
-
-	pointer-events: none;
-
-	}
-
-.leaflet-popup-tip {
-
-	width: 17px;
-
-	height: 17px;
-
-	padding: 1px;
-
-
-
-	margin: -10px auto 0;
-
-	pointer-events: auto;
-
-
-
-	-webkit-transform: rotate(45deg);
-
-	   -moz-transform: rotate(45deg);
-
-	    -ms-transform: rotate(45deg);
-
-	        transform: rotate(45deg);
-
-	}
-
-.leaflet-popup-content-wrapper,
-
-.leaflet-popup-tip {
-
-	background: white;
-
-	color: #333;
-
-	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
-
-	}
-
-.leaflet-container a.leaflet-popup-close-button {
-
-	position: absolute;
-
-	top: 0;
-
-	right: 0;
-
-	border: none;
-
-	text-align: center;
-
-	width: 24px;
-
-	height: 24px;
-
-	font: 16px/24px Tahoma, Verdana, sans-serif;
-
-	color: #757575;
-
-	text-decoration: none;
-
-	background: transparent;
-
-	}
-
-.leaflet-container a.leaflet-popup-close-button:hover,
-
-.leaflet-container a.leaflet-popup-close-button:focus {
-
-	color: #585858;
-
-	}
-
-.leaflet-popup-scrolled {
-
-	overflow: auto;
-
-	}
-
-
-
-.leaflet-oldie .leaflet-popup-content-wrapper {
-
-	-ms-zoom: 1;
-
-	}
-
-.leaflet-oldie .leaflet-popup-tip {
-
-	width: 24px;
-
-	margin: 0 auto;
-
-
-
-	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
-
-	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
-
-	}
-
-
-
-.leaflet-oldie .leaflet-control-zoom,
-
-.leaflet-oldie .leaflet-control-layers,
-
-.leaflet-oldie .leaflet-popup-content-wrapper,
-
-.leaflet-oldie .leaflet-popup-tip {
-
-	border: 1px solid #999;
-
-	}
-
-
-
-
-
-/* div icon */
-
-
-
-.leaflet-div-icon {
-
-	background: #fff;
-
-	border: 1px solid #666;
-
-	}
-
-
-
-
-
-/* Tooltip */
-
-/* Base styles for the element that has a tooltip */
-
-.leaflet-tooltip {
-
-	position: absolute;
-
-	padding: 6px;
-
-	background-color: #fff;
-
-	border: 1px solid #fff;
-
-	border-radius: 3px;
-
-	color: #222;
-
-	white-space: nowrap;
-
-	-webkit-user-select: none;
-
-	-moz-user-select: none;
-
-	-ms-user-select: none;
-
-	user-select: none;
-
-	pointer-events: none;
-
-	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-
-	}
-
-.leaflet-tooltip.leaflet-interactive {
-
-	cursor: pointer;
-
-	pointer-events: auto;
-
-	}
-
-.leaflet-tooltip-top:before,
-
-.leaflet-tooltip-bottom:before,
-
-.leaflet-tooltip-left:before,
-
-.leaflet-tooltip-right:before {
-
-	position: absolute;
-
-	pointer-events: none;
-
-	border: 6px solid transparent;
-
-	background: transparent;
-
-	content: "";
-
-	}
-
-
-
-/* Directions */
-
-
-
-.leaflet-tooltip-bottom {
-
-	margin-top: 6px;
-
-}
-
-.leaflet-tooltip-top {
-
-	margin-top: -6px;
-
-}
-
-.leaflet-tooltip-bottom:before,
-
-.leaflet-tooltip-top:before {
-
-	left: 50%;
-
-	margin-left: -6px;
-
-	}
-
-.leaflet-tooltip-top:before {
-
-	bottom: 0;
-
-	margin-bottom: -12px;
-
-	border-top-color: #fff;
-
-	}
-
-.leaflet-tooltip-bottom:before {
-
-	top: 0;
-
-	margin-top: -12px;
-
-	margin-left: -6px;
-
-	border-bottom-color: #fff;
-
-	}
-
-.leaflet-tooltip-left {
-
-	margin-left: -6px;
-
-}
-
-.leaflet-tooltip-right {
-
-	margin-left: 6px;
-
-}
-
-.leaflet-tooltip-left:before,
-
-.leaflet-tooltip-right:before {
-
-	top: 50%;
-
-	margin-top: -6px;
-
-	}
-
-.leaflet-tooltip-left:before {
-
-	right: 0;
-
-	margin-right: -12px;
-
-	border-left-color: #fff;
-
-	}
-
-.leaflet-tooltip-right:before {
-
-	left: 0;
-
-	margin-left: -12px;
-
-	border-right-color: #fff;
-
-	}
-
-
-
-/* Printing */
-
-
-
-@media print {
-
-	/* Prevent printers from removing background-images of controls. */
-
-	.leaflet-control {
-
-		-webkit-print-color-adjust: exact;
-
-		print-color-adjust: exact;
-
-		}
-
-	}
-
+<style id="leaflet-css">/* required styles */
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	}
+.leaflet-container {
+	overflow: hidden;
+	}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	  -webkit-user-drag: none;
+	}
+/* Prevents IE11 from highlighting tiles in blue */
+.leaflet-tile::selection {
+	background: transparent;
+}
+/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
+.leaflet-safari .leaflet-tile {
+	image-rendering: -webkit-optimize-contrast;
+	}
+/* hack that prevents hw layers "stretching" when loading new tiles */
+.leaflet-safari .leaflet-tile-container {
+	width: 1600px;
+	height: 1600px;
+	-webkit-transform-origin: 0 0;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	display: block;
+	}
+/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
+/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
+.leaflet-container .leaflet-overlay-pane svg {
+	max-width: none !important;
+	max-height: none !important;
+	}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto;
+	padding: 0;
+	}
+
+.leaflet-container img.leaflet-tile {
+	/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
+	mix-blend-mode: plus-lighter;
+}
+
+.leaflet-container.leaflet-touch-zoom {
+	-ms-touch-action: pan-x pan-y;
+	touch-action: pan-x pan-y;
+	}
+.leaflet-container.leaflet-touch-drag {
+	-ms-touch-action: pinch-zoom;
+	/* Fallback for FF which doesn't support pinch-zoom */
+	touch-action: none;
+	touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+	-ms-touch-action: none;
+	touch-action: none;
+}
+.leaflet-container {
+	-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+	filter: inherit;
+	visibility: hidden;
+	}
+.leaflet-tile-loaded {
+	visibility: inherit;
+	}
+.leaflet-zoom-box {
+	width: 0;
+	height: 0;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	z-index: 800;
+	}
+/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
+.leaflet-overlay-pane svg {
+	-moz-user-select: none;
+	}
+
+.leaflet-pane         { z-index: 400; }
+
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+
+.leaflet-vml-shape {
+	width: 1px;
+	height: 1px;
+	}
+.lvml {
+	behavior: url(#default#VML);
+	display: inline-block;
+	position: absolute;
+	}
+
+
+/* control positioning */
+
+.leaflet-control {
+	position: relative;
+	z-index: 800;
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+.leaflet-top,
+.leaflet-bottom {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	}
+.leaflet-top {
+	top: 0;
+	}
+.leaflet-right {
+	right: 0;
+	}
+.leaflet-bottom {
+	bottom: 0;
+	}
+.leaflet-left {
+	left: 0;
+	}
+.leaflet-control {
+	float: left;
+	clear: both;
+	}
+.leaflet-right .leaflet-control {
+	float: right;
+	}
+.leaflet-top .leaflet-control {
+	margin-top: 10px;
+	}
+.leaflet-bottom .leaflet-control {
+	margin-bottom: 10px;
+	}
+.leaflet-left .leaflet-control {
+	margin-left: 10px;
+	}
+.leaflet-right .leaflet-control {
+	margin-right: 10px;
+	}
+
+
+/* zoom and fade animations */
+
+.leaflet-fade-anim .leaflet-popup {
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	   -moz-transition: opacity 0.2s linear;
+	        transition: opacity 0.2s linear;
+	}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+	opacity: 1;
+	}
+.leaflet-zoom-animated {
+	-webkit-transform-origin: 0 0;
+	    -ms-transform-origin: 0 0;
+	        transform-origin: 0 0;
+	}
+svg.leaflet-zoom-animated {
+	will-change: transform;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+	}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+	-webkit-transition: none;
+	   -moz-transition: none;
+	        transition: none;
+	}
+
+.leaflet-zoom-anim .leaflet-zoom-hide {
+	visibility: hidden;
+	}
+
+
+/* cursors */
+
+.leaflet-interactive {
+	cursor: pointer;
+	}
+.leaflet-grab {
+	cursor: -webkit-grab;
+	cursor:    -moz-grab;
+	cursor:         grab;
+	}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+	cursor: crosshair;
+	}
+.leaflet-popup-pane,
+.leaflet-control {
+	cursor: auto;
+	}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+	cursor: move;
+	cursor: -webkit-grabbing;
+	cursor:    -moz-grabbing;
+	cursor:         grabbing;
+	}
+
+/* marker & overlays interactivity */
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+	pointer-events: none;
+	}
+
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+
+/* visual tweaks */
+
+.leaflet-container {
+	background: #ddd;
+	outline-offset: 1px;
+	}
+.leaflet-container a {
+	color: #0078A8;
+	}
+.leaflet-zoom-box {
+	border: 2px dotted #38f;
+	background: rgba(255,255,255,0.5);
+	}
+
+
+/* general typography */
+.leaflet-container {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	}
+
+
+/* general toolbar styles */
+
+.leaflet-bar {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	border-radius: 4px;
+	}
+.leaflet-bar a {
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar a:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar a:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar a.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+
+.leaflet-touch .leaflet-bar a {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar a:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar a:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+
+/* zoom control */
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font: bold 18px 'Lucida Console', Monaco, monospace;
+	text-indent: 1px;
+	}
+
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+	font-size: 22px;
+	}
+
+
+/* layers control */
+
+.leaflet-control-layers {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+	background: #fff;
+	border-radius: 5px;
+	}
+.leaflet-control-layers-toggle {
+	background-image: url(images/layers.png);
+	width: 36px;
+	height: 36px;
+	}
+.leaflet-retina .leaflet-control-layers-toggle {
+	background-image: url(images/layers-2x.png);
+	background-size: 26px 26px;
+	}
+.leaflet-touch .leaflet-control-layers-toggle {
+	width: 44px;
+	height: 44px;
+	}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	color: #333;
+	background: #fff;
+	}
+.leaflet-control-layers-scrollbar {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 5px;
+	}
+.leaflet-control-layers-selector {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	font-size: 13px;
+	font-size: 1.08333em;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	}
+
+/* Default icon URLs */
+.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
+	background-image: url(images/marker-icon.png);
+	}
+
+
+/* attribution and scale controls */
+
+.leaflet-container .leaflet-control-attribution {
+	background: #fff;
+	background: rgba(255, 255, 255, 0.8);
+	margin: 0;
+	}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+	padding: 0 5px;
+	color: #333;
+	line-height: 1.4;
+	}
+.leaflet-control-attribution a {
+	text-decoration: none;
+	}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+	text-decoration: underline;
+	}
+.leaflet-attribution-flag {
+	display: inline !important;
+	vertical-align: baseline !important;
+	width: 1em;
+	height: 0.6669em;
+	}
+.leaflet-left .leaflet-control-scale {
+	margin-left: 5px;
+	}
+.leaflet-bottom .leaflet-control-scale {
+	margin-bottom: 5px;
+	}
+.leaflet-control-scale-line {
+	border: 2px solid #777;
+	border-top: none;
+	line-height: 1.1;
+	padding: 2px 5px 1px;
+	white-space: nowrap;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	background: rgba(255, 255, 255, 0.8);
+	text-shadow: 1px 1px #fff;
+	}
+.leaflet-control-scale-line:not(:first-child) {
+	border-top: 2px solid #777;
+	border-bottom: none;
+	margin-top: -2px;
+	}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+	border-bottom: 2px solid #777;
+	}
+
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	box-shadow: none;
+	}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	border: 2px solid rgba(0,0,0,0.2);
+	background-clip: padding-box;
+	}
+
+
+/* popup */
+
+.leaflet-popup {
+	position: absolute;
+	text-align: center;
+	margin-bottom: 20px;
+	}
+.leaflet-popup-content-wrapper {
+	padding: 1px;
+	text-align: left;
+	border-radius: 12px;
+	}
+.leaflet-popup-content {
+	margin: 13px 24px 13px 20px;
+	line-height: 1.3;
+	font-size: 13px;
+	font-size: 1.08333em;
+	min-height: 1px;
+	}
+.leaflet-popup-content p {
+	margin: 17px 0;
+	margin: 1.3em 0;
+	}
+.leaflet-popup-tip-container {
+	width: 40px;
+	height: 20px;
+	position: absolute;
+	left: 50%;
+	margin-top: -1px;
+	margin-left: -20px;
+	overflow: hidden;
+	pointer-events: none;
+	}
+.leaflet-popup-tip {
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+
+	margin: -10px auto 0;
+	pointer-events: auto;
+
+	-webkit-transform: rotate(45deg);
+	   -moz-transform: rotate(45deg);
+	    -ms-transform: rotate(45deg);
+	        transform: rotate(45deg);
+	}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: white;
+	color: #333;
+	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+	}
+.leaflet-container a.leaflet-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: none;
+	text-align: center;
+	width: 24px;
+	height: 24px;
+	font: 16px/24px Tahoma, Verdana, sans-serif;
+	color: #757575;
+	text-decoration: none;
+	background: transparent;
+	}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+	color: #585858;
+	}
+.leaflet-popup-scrolled {
+	overflow: auto;
+	}
+
+.leaflet-oldie .leaflet-popup-content-wrapper {
+	-ms-zoom: 1;
+	}
+.leaflet-oldie .leaflet-popup-tip {
+	width: 24px;
+	margin: 0 auto;
+
+	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+	}
+
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+	border: 1px solid #999;
+	}
+
+
+/* div icon */
+
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+
+
+/* Tooltip */
+/* Base styles for the element that has a tooltip */
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-interactive {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+
+/* Directions */
+
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+
+/* Printing */
+
+@media print {
+	/* Prevent printers from removing background-images of controls. */
+	.leaflet-control {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		}
+	}
 </style>
 <script id="leaflet-js">/* @preserve
  * Leaflet 1.9.4, a JS library for interactive maps. https://leafletjs.com
@@ -1404,7 +747,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 //# sourceMappingURL=leaflet.js.map</script>
 <script>
 const PARK=[23.262350444019077, 113.30751481664946];
-const DATA=[{"num": 1, "name": "白云区人民医院", "addr": "白云区黄石街元下底路23号", "s": 6.7, "d": 9.2, "off": 18, "peak": 28, "depts": ["儿童保健科", "口腔科（省口腔白云分院承办）"], "tag": "both", "crowd": "少", "note": "最近的一家；口腔科没有儿童口腔专科，舌系带问口腔外科", "phones": [["020-37236979", "02037236979"]], "gcj": [113.272097, 23.211417], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.27210,23.21142,%E7%99%BD%E4%BA%91%E5%8C%BA%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.21773,113.27854%7Cname:%E7%99%BD%E4%BA%91%E5%8C%BA%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 2, "name": "广中医一附院白云医院", "addr": "白云区人和镇鹤龙七路2号", "s": 8.5, "d": 11.0, "off": 22, "peak": 33, "depts": ["儿童保健科", "口腔科（含儿童牙科）"], "tag": "both", "crowd": "少", "note": "停车有就诊优惠；不是独立儿童口腔科，2月龄舌系带先电话确认", "phones": [["020-28806183", "02028806183"]], "gcj": [113.293343, 23.337558], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.29334,23.33756,%E5%B9%BF%E4%B8%AD%E5%8C%BB%E4%B8%80%E9%99%84%E9%99%A2%E7%99%BD%E4%BA%91%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.34382,113.29979%7Cname:%E5%B9%BF%E4%B8%AD%E5%8C%BB%E4%B8%80%E9%99%84%E9%99%A2%E7%99%BD%E4%BA%91%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 3, "name": "南方医院", "addr": "白云区广州大道北1838号", "s": 8.6, "d": 12.7, "off": 25, "peak": 38, "depts": ["儿童口腔科"], "tag": "oral", "crowd": "多", "note": "有独立儿童口腔科，但号最紧、早高峰排队明显", "phones": [["020-61641888", "02061641888"]], "gcj": [113.331003, 23.188332], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.33100,23.18833,%E5%8D%97%E6%96%B9%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.19403,113.33758%7Cname:%E5%8D%97%E6%96%B9%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 4, "name": "广中医一附院（机场路）", "addr": "白云区机场路16号", "s": 12.5, "d": 15.4, "off": 31, "peak": 46, "depts": ["儿童保健与康复门诊", "口腔科（含儿童牙科）"], "tag": "both", "crowd": "中", "note": "儿保和儿童牙科都有，但院区大、人多", "phones": [["020-36591912", "02036591912"], ["020-36591222", "02036591222"]], "gcj": [113.264405, 23.157182], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.26441,23.15718,%E5%B9%BF%E4%B8%AD%E5%8C%BB%E4%B8%80%E9%99%84%E9%99%A2%EF%BC%88%E6%9C%BA%E5%9C%BA%E8%B7%AF%EF%BC%89&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.16341,113.27085%7Cname:%E5%B9%BF%E4%B8%AD%E5%8C%BB%E4%B8%80%E9%99%84%E9%99%A2%EF%BC%88%E6%9C%BA%E5%9C%BA%E8%B7%AF%EF%BC%89&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 5, "name": "省妇幼越秀院区", "addr": "越秀区广园西路13号", "s": 14.0, "d": 15.9, "off": 32, "peak": 48, "depts": ["儿童保健科", "口腔科（婴幼儿口腔保健）"], "tag": "both", "crowd": "多", "note": "儿保和婴儿口腔都能做；院内停车很差，建议打车或地铁", "phones": [["020-39151611", "02039151611"]], "gcj": [113.248636, 23.148076], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.24864,23.14808,%E7%9C%81%E5%A6%87%E5%B9%BC%E8%B6%8A%E7%A7%80%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.15405,113.25513%7Cname:%E7%9C%81%E5%A6%87%E5%B9%BC%E8%B6%8A%E7%A7%80%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 6, "name": "省口腔沙河院区", "addr": "天河区广州大道中1305号", "s": 12.7, "d": 17.2, "off": 34, "peak": 52, "depts": ["儿童口腔科（1楼）"], "tag": "oral", "crowd": "中", "note": "三甲口腔专科，明确做舌系带成形术，新院区号相对好约", "phones": [["020-89089769", "02089089769"], ["020-84427034", "02084427034"]], "gcj": [113.312928, 23.148654], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.31293,23.14865,%E7%9C%81%E5%8F%A3%E8%85%94%E6%B2%99%E6%B2%B3%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.15460,113.31943%7Cname:%E7%9C%81%E5%8F%A3%E8%85%94%E6%B2%99%E6%B2%B3%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 7, "name": "广东省人民医院", "addr": "越秀区中山二路106号", "s": 15.5, "d": 19.3, "off": 39, "peak": 58, "depts": ["儿童保健科", "口腔科"], "tag": "both", "crowd": "多", "note": "三甲综合；有儿童保健科，口腔科没有儿童口腔专业；本部人多，建议提前看号", "phones": [["020-83827812", "02083827812"], ["020-83882222", "02083882222"]], "gcj": [113.287016, 23.124447], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.28702,23.12445,%E5%B9%BF%E4%B8%9C%E7%9C%81%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13076,113.29343%7Cname:%E5%B9%BF%E4%B8%9C%E7%9C%81%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 8, "name": "市妇儿中心儿童医院院区", "addr": "越秀区人民中路318号", "s": 16.8, "d": 19.7, "off": 39, "peak": 59, "depts": ["儿童保健科", "口腔科"], "tag": "both", "crowd": "多", "note": "儿童专科天花板，但号最难抢、人最多", "phones": [["020-81886332", "02081886332"]], "gcj": [113.253937, 23.119429], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.25394,23.11943,%E5%B8%82%E5%A6%87%E5%84%BF%E4%B8%AD%E5%BF%83%E5%84%BF%E7%AB%A5%E5%8C%BB%E9%99%A2%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.12549,113.26041%7Cname:%E5%B8%82%E5%A6%87%E5%84%BF%E4%B8%AD%E5%BF%83%E5%84%BF%E7%AB%A5%E5%8C%BB%E9%99%A2%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 9, "name": "光华口腔天河院区", "addr": "天河区华利路59号", "s": 16.1, "d": 20.1, "off": 40, "peak": 60, "depts": ["儿童口腔科（2层）"], "tag": "oral", "crowd": "中", "note": "2025年10月新院区，楼下保利大厦可停车，CBD收费贵；有母婴室", "phones": [["020-83863002", "02083863002"]], "gcj": [113.319666, 23.118055], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.31967,23.11806,%E5%85%89%E5%8D%8E%E5%8F%A3%E8%85%94%E5%A4%A9%E6%B2%B3%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.12389,113.32618%7Cname:%E5%85%89%E5%8D%8E%E5%8F%A3%E8%85%94%E5%A4%A9%E6%B2%B3%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 10, "name": "光华口腔本部", "addr": "越秀区陵园西路56号", "s": 14.9, "d": 20.2, "off": 40, "peak": 61, "depts": ["儿童口腔科"], "tag": "oral", "crowd": "多", "note": "口腔专科老牌本部，号紧、停车难", "phones": [["020-83863002", "02083863002"]], "gcj": [113.28327, 23.129943], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.28327,23.12994,%E5%85%89%E5%8D%8E%E5%8F%A3%E8%85%94%E6%9C%AC%E9%83%A8&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13627,113.28968%7Cname:%E5%85%89%E5%8D%8E%E5%8F%A3%E8%85%94%E6%9C%AC%E9%83%A8&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 11, "name": "妇儿中心珠江新城院区", "addr": "天河区金穗路9号", "s": 15.3, "d": 20.7, "off": 41, "peak": 62, "depts": ["儿童保健科", "口腔科"], "tag": "both", "crowd": "多", "note": "地下停车场入口在金穗路，车位很紧张", "phones": [["020-81886332", "02081886332"]], "gcj": [113.320258, 23.124905], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.32026,23.12491,%E5%A6%87%E5%84%BF%E4%B8%AD%E5%BF%83%E7%8F%A0%E6%B1%9F%E6%96%B0%E5%9F%8E%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13073,113.32677%7Cname:%E5%A6%87%E5%84%BF%E4%B8%AD%E5%BF%83%E7%8F%A0%E6%B1%9F%E6%96%B0%E5%9F%8E%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 12, "name": "暨南大学附属第一医院（华侨医院）", "addr": "天河区黄埔大道西613号", "s": 15.7, "d": 21.3, "off": 43, "peak": 64, "depts": ["儿童保健科", "口腔科（儿童口腔专业）"], "tag": "both", "crowd": "多", "note": "三甲综合；卫健委诊疗科目里儿童保健科和口腔科儿童口腔专业都有；门诊量大，先看公众号号源", "phones": [["020-38688888", "02038688888"], ["020-38688037", "02038688037"]], "gcj": [113.350542, 23.12687], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.35054,23.12687,%E6%9A%A8%E5%8D%97%E5%A4%A7%E5%AD%A6%E9%99%84%E5%B1%9E%E7%AC%AC%E4%B8%80%E5%8C%BB%E9%99%A2%EF%BC%88%E5%8D%8E%E4%BE%A8%E5%8C%BB%E9%99%A2%EF%BC%89&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13258,113.35708%7Cname:%E6%9A%A8%E5%8D%97%E5%A4%A7%E5%AD%A6%E9%99%84%E5%B1%9E%E7%AC%AC%E4%B8%80%E5%8C%BB%E9%99%A2%EF%BC%88%E5%8D%8E%E4%BE%A8%E5%8C%BB%E9%99%A2%EF%BC%89&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 13, "name": "广医口腔海珠院区", "addr": "海珠区艺苑路南丽苑", "s": 17.8, "d": 23.1, "off": 46, "peak": 69, "depts": ["正畸与儿童口腔中心"], "tag": "oral", "crowd": "少", "note": "2026年10月底通过三甲评审公示，院区较新；距离最远", "phones": [["020-84014245", "02084014245"]], "gcj": [113.323053, 23.102797], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.32305,23.10280,%E5%B9%BF%E5%8C%BB%E5%8F%A3%E8%85%94%E6%B5%B7%E7%8F%A0%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.10858,113.32959%7Cname:%E5%B9%BF%E5%8C%BB%E5%8F%A3%E8%85%94%E6%B5%B7%E7%8F%A0%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}];
+const DATA=[{"num": 1, "name": "白云区人民医院", "addr": "白云区黄石街元下底路23号", "s": 6.7, "d": 9.2, "off": 18, "peak": 28, "depts": ["儿童保健科", "口腔科（省口腔白云分院承办）"], "tag": "both", "crowd": "少", "note": "最近的一家；口腔科没有儿童口腔专科，舌系带问口腔外科", "phones": [["020-37236979", "02037236979"]], "gcj": [113.272097, 23.211417], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.27210,23.21142,%E7%99%BD%E4%BA%91%E5%8C%BA%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.21773,113.27854%7Cname:%E7%99%BD%E4%BA%91%E5%8C%BA%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 2, "name": "广中医一附院白云医院", "addr": "白云区人和镇鹤龙七路2号", "s": 8.5, "d": 11.0, "off": 22, "peak": 33, "depts": ["儿童保健科", "口腔科（含儿童牙科）"], "tag": "both", "crowd": "少", "note": "停车有就诊优惠；不是独立儿童口腔科，2月龄舌系带先电话确认", "phones": [["020-28806183", "02028806183"]], "gcj": [113.293343, 23.337558], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.29334,23.33756,%E5%B9%BF%E4%B8%AD%E5%8C%BB%E4%B8%80%E9%99%84%E9%99%A2%E7%99%BD%E4%BA%91%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.34382,113.29979%7Cname:%E5%B9%BF%E4%B8%AD%E5%8C%BB%E4%B8%80%E9%99%84%E9%99%A2%E7%99%BD%E4%BA%91%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 3, "name": "南方医院", "addr": "白云区广州大道北1838号", "s": 8.6, "d": 12.7, "off": 25, "peak": 38, "depts": ["儿童口腔科"], "tag": "oral", "crowd": "多", "note": "有独立儿童口腔科，但号最紧、早高峰排队明显", "phones": [["020-61641888", "02061641888"]], "gcj": [113.331003, 23.188332], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.33100,23.18833,%E5%8D%97%E6%96%B9%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.19403,113.33758%7Cname:%E5%8D%97%E6%96%B9%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 4, "name": "广中医一附院（机场路）", "addr": "白云区机场路16号", "s": 12.5, "d": 15.4, "off": 31, "peak": 46, "depts": ["儿童保健与康复门诊", "口腔科（含儿童牙科）"], "tag": "both", "crowd": "中", "note": "儿保和儿童牙科都有，但院区大、人多", "phones": [["020-36591912", "02036591912"], ["020-36591222", "02036591222"]], "gcj": [113.264405, 23.157182], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.26441,23.15718,%E5%B9%BF%E4%B8%AD%E5%8C%BB%E4%B8%80%E9%99%84%E9%99%A2%EF%BC%88%E6%9C%BA%E5%9C%BA%E8%B7%AF%EF%BC%89&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.16341,113.27085%7Cname:%E5%B9%BF%E4%B8%AD%E5%8C%BB%E4%B8%80%E9%99%84%E9%99%A2%EF%BC%88%E6%9C%BA%E5%9C%BA%E8%B7%AF%EF%BC%89&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 5, "name": "省妇幼越秀院区", "addr": "越秀区广园西路13号", "s": 14.0, "d": 15.9, "off": 32, "peak": 48, "depts": ["儿童保健科", "口腔科（婴幼儿口腔保健）"], "tag": "both", "crowd": "多", "note": "儿保和婴儿口腔都能做；院内停车很差，建议打车或地铁", "phones": [["020-39151611", "02039151611"]], "gcj": [113.248636, 23.148076], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.24864,23.14808,%E7%9C%81%E5%A6%87%E5%B9%BC%E8%B6%8A%E7%A7%80%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.15405,113.25513%7Cname:%E7%9C%81%E5%A6%87%E5%B9%BC%E8%B6%8A%E7%A7%80%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 6, "name": "省口腔沙河院区", "addr": "天河区广州大道中1305号", "s": 12.7, "d": 17.2, "off": 34, "peak": 52, "depts": ["儿童口腔科（1楼）"], "tag": "oral", "crowd": "中", "note": "三甲口腔专科，明确做舌系带成形术，新院区号相对好约", "phones": [["020-89089769", "02089089769"], ["020-84427034", "02084427034"]], "gcj": [113.312928, 23.148654], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.31293,23.14865,%E7%9C%81%E5%8F%A3%E8%85%94%E6%B2%99%E6%B2%B3%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.15460,113.31943%7Cname:%E7%9C%81%E5%8F%A3%E8%85%94%E6%B2%99%E6%B2%B3%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 7, "name": "广州市第一人民医院", "addr": "越秀区盘福路1号", "s": 15.5, "d": 17.8, "off": 36, "peak": 53, "depts": ["儿童保健科", "口腔科（儿童口腔专业）"], "tag": "both", "crowd": "多", "note": "三甲综合；有儿童保健科和儿童口腔专业；院本部在盘福路，地铁1号线西门口、2号线纪念堂", "phones": [["020-81048888", "02081048888"]], "gcj": [113.256465, 23.131213], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.25646,23.13121,%E5%B9%BF%E5%B7%9E%E5%B8%82%E7%AC%AC%E4%B8%80%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13732,113.26292%7Cname:%E5%B9%BF%E5%B7%9E%E5%B8%82%E7%AC%AC%E4%B8%80%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 8, "name": "广东省人民医院", "addr": "越秀区中山二路106号", "s": 15.5, "d": 19.3, "off": 39, "peak": 58, "depts": ["儿童保健科", "口腔科"], "tag": "both", "crowd": "多", "note": "三甲综合；有儿童保健科，口腔科没有儿童口腔专业；本部人多，建议提前看号", "phones": [["020-83827812", "02083827812"], ["020-83882222", "02083882222"]], "gcj": [113.287016, 23.124447], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.28702,23.12445,%E5%B9%BF%E4%B8%9C%E7%9C%81%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13076,113.29343%7Cname:%E5%B9%BF%E4%B8%9C%E7%9C%81%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 9, "name": "市妇儿中心儿童医院院区", "addr": "越秀区人民中路318号", "s": 16.8, "d": 19.7, "off": 39, "peak": 59, "depts": ["儿童保健科", "口腔科"], "tag": "both", "crowd": "多", "note": "儿童专科天花板，但号最难抢、人最多", "phones": [["020-81886332", "02081886332"]], "gcj": [113.253937, 23.119429], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.25394,23.11943,%E5%B8%82%E5%A6%87%E5%84%BF%E4%B8%AD%E5%BF%83%E5%84%BF%E7%AB%A5%E5%8C%BB%E9%99%A2%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.12549,113.26041%7Cname:%E5%B8%82%E5%A6%87%E5%84%BF%E4%B8%AD%E5%BF%83%E5%84%BF%E7%AB%A5%E5%8C%BB%E9%99%A2%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 10, "name": "光华口腔天河院区", "addr": "天河区华利路59号", "s": 16.1, "d": 20.1, "off": 40, "peak": 60, "depts": ["儿童口腔科（2层）"], "tag": "oral", "crowd": "中", "note": "2025年10月新院区，楼下保利大厦可停车，CBD收费贵；有母婴室", "phones": [["020-83863002", "02083863002"]], "gcj": [113.319666, 23.118055], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.31967,23.11806,%E5%85%89%E5%8D%8E%E5%8F%A3%E8%85%94%E5%A4%A9%E6%B2%B3%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.12389,113.32618%7Cname:%E5%85%89%E5%8D%8E%E5%8F%A3%E8%85%94%E5%A4%A9%E6%B2%B3%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 11, "name": "光华口腔本部", "addr": "越秀区陵园西路56号", "s": 14.9, "d": 20.2, "off": 40, "peak": 61, "depts": ["儿童口腔科"], "tag": "oral", "crowd": "多", "note": "口腔专科老牌本部，号紧、停车难", "phones": [["020-83863002", "02083863002"]], "gcj": [113.28327, 23.129943], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.28327,23.12994,%E5%85%89%E5%8D%8E%E5%8F%A3%E8%85%94%E6%9C%AC%E9%83%A8&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13627,113.28968%7Cname:%E5%85%89%E5%8D%8E%E5%8F%A3%E8%85%94%E6%9C%AC%E9%83%A8&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 12, "name": "中山大学孙逸仙纪念医院", "addr": "越秀区沿江西路107号", "s": 17.8, "d": 20.4, "off": 41, "peak": 61, "depts": ["儿童保健科", "口腔科（儿童口腔专业）"], "tag": "both", "crowd": "多", "note": "三甲综合；有儿童保健科和儿童口腔专业；老城区院区，停车一般", "phones": [["020-81332199", "02081332199"]], "gcj": [113.25581, 23.109224], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.25581,23.10922,%E4%B8%AD%E5%B1%B1%E5%A4%A7%E5%AD%A6%E5%AD%99%E9%80%B8%E4%BB%99%E7%BA%AA%E5%BF%B5%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.11532,113.26228%7Cname:%E4%B8%AD%E5%B1%B1%E5%A4%A7%E5%AD%A6%E5%AD%99%E9%80%B8%E4%BB%99%E7%BA%AA%E5%BF%B5%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 13, "name": "中山大学附属第三医院", "addr": "天河区天河路600号", "s": 14.7, "d": 20.6, "off": 41, "peak": 62, "depts": ["儿童保健科", "口腔科"], "tag": "both", "crowd": "多", "note": "三甲综合；有儿童保健科（儿童发育行为中心）；口腔科没有儿童口腔专业；地铁3号线岗顶站", "phones": [["020-85253333", "02085253333"]], "gcj": [113.341161, 23.133974], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.34116,23.13397,%E4%B8%AD%E5%B1%B1%E5%A4%A7%E5%AD%A6%E9%99%84%E5%B1%9E%E7%AC%AC%E4%B8%89%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13963,113.34771%7Cname:%E4%B8%AD%E5%B1%B1%E5%A4%A7%E5%AD%A6%E9%99%84%E5%B1%9E%E7%AC%AC%E4%B8%89%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 14, "name": "妇儿中心珠江新城院区", "addr": "天河区金穗路9号", "s": 15.3, "d": 20.7, "off": 41, "peak": 62, "depts": ["儿童保健科", "口腔科"], "tag": "both", "crowd": "多", "note": "地下停车场入口在金穗路，车位很紧张", "phones": [["020-81886332", "02081886332"]], "gcj": [113.320258, 23.124905], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.32026,23.12491,%E5%A6%87%E5%84%BF%E4%B8%AD%E5%BF%83%E7%8F%A0%E6%B1%9F%E6%96%B0%E5%9F%8E%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13073,113.32677%7Cname:%E5%A6%87%E5%84%BF%E4%B8%AD%E5%BF%83%E7%8F%A0%E6%B1%9F%E6%96%B0%E5%9F%8E%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 15, "name": "暨南大学附属第一医院（华侨医院）", "addr": "天河区黄埔大道西613号", "s": 15.7, "d": 21.3, "off": 43, "peak": 64, "depts": ["儿童保健科", "口腔科（儿童口腔专业）"], "tag": "both", "crowd": "多", "note": "三甲综合；卫健委诊疗科目里儿童保健科和口腔科儿童口腔专业都有；门诊量大，先看公众号号源", "phones": [["020-38688888", "02038688888"], ["020-38688037", "02038688037"]], "gcj": [113.350542, 23.12687], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.35054,23.12687,%E6%9A%A8%E5%8D%97%E5%A4%A7%E5%AD%A6%E9%99%84%E5%B1%9E%E7%AC%AC%E4%B8%80%E5%8C%BB%E9%99%A2%EF%BC%88%E5%8D%8E%E4%BE%A8%E5%8C%BB%E9%99%A2%EF%BC%89&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.13258,113.35708%7Cname:%E6%9A%A8%E5%8D%97%E5%A4%A7%E5%AD%A6%E9%99%84%E5%B1%9E%E7%AC%AC%E4%B8%80%E5%8C%BB%E9%99%A2%EF%BC%88%E5%8D%8E%E4%BE%A8%E5%8C%BB%E9%99%A2%EF%BC%89&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 16, "name": "广医口腔海珠院区", "addr": "海珠区艺苑路南丽苑", "s": 17.8, "d": 23.1, "off": 46, "peak": 69, "depts": ["正畸与儿童口腔中心"], "tag": "oral", "crowd": "少", "note": "2026年10月底通过三甲评审公示，院区较新；距离最远", "phones": [["020-84014245", "02084014245"]], "gcj": [113.323053, 23.102797], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.32305,23.10280,%E5%B9%BF%E5%8C%BB%E5%8F%A3%E8%85%94%E6%B5%B7%E7%8F%A0%E9%99%A2%E5%8C%BA&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.10858,113.32959%7Cname:%E5%B9%BF%E5%8C%BB%E5%8F%A3%E8%85%94%E6%B5%B7%E7%8F%A0%E9%99%A2%E5%8C%BA&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 17, "name": "广东省第二人民医院", "addr": "海珠区新港中路466号", "s": 18.9, "d": 24.2, "off": 48, "peak": 73, "depts": ["儿童保健科", "口腔科"], "tag": "both", "crowd": "中", "note": "三甲综合；有儿童保健科，口腔科没有儿童口腔专业；地铁8号线赤岗站C1口", "phones": [["020-89168066", "02089168066"]], "gcj": [113.333863, 23.094468], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.33386,23.09447,%E5%B9%BF%E4%B8%9C%E7%9C%81%E7%AC%AC%E4%BA%8C%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.10015,113.34043%7Cname:%E5%B9%BF%E4%B8%9C%E7%9C%81%E7%AC%AC%E4%BA%8C%E4%BA%BA%E6%B0%91%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}, {"num": 18, "name": "南方医科大学第三附属医院", "addr": "天河区中山大道西183号", "s": 15.0, "d": 25.8, "off": 52, "peak": 77, "depts": ["儿童保健科", "口腔科"], "tag": "both", "crowd": "中", "note": "三甲综合；有儿童保健科，口腔科没有儿童口腔专业；距离最远的一档", "phones": [["020-62784240", "02062784240"]], "gcj": [113.36276, 23.134555], "amap": "https://uri.amap.com/navigation?from=113.30751,23.26235,%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&to=113.36276,23.13455,%E5%8D%97%E6%96%B9%E5%8C%BB%E7%A7%91%E5%A4%A7%E5%AD%A6%E7%AC%AC%E4%B8%89%E9%99%84%E5%B1%9E%E5%8C%BB%E9%99%A2&mode=car&policy=1&src=dsh&coordinate=gaode&callnative=0", "bmap": "https://api.map.baidu.com/direction?origin=latlng:23.26839,113.31399%7Cname:%E5%8F%8C%E5%92%8C%E5%85%AC%E5%9B%AD&destination=latlng:23.14043,113.36927%7Cname:%E5%8D%97%E6%96%B9%E5%8C%BB%E7%A7%91%E5%A4%A7%E5%AD%A6%E7%AC%AC%E4%B8%89%E9%99%84%E5%B1%9E%E5%8C%BB%E9%99%A2&mode=driving&region=%E5%B9%BF%E5%B7%9E&output=html&src=dsh"}];
 const $=s=>document.querySelector(s);
 const tagLabel={both:'儿保+儿童口腔',oral:'儿童口腔科'};
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -1428,9 +771,18 @@ function card(h){
     </div>
   </article>`;
 }
-function render(filter){
-  const list=DATA.filter(h=>filter==='all'||(filter==='oral'?h.tag==='oral':filter==='care'?h.tag!=='oral':h.off<=30));
-  $('#list').innerHTML=list.map(card).join('')||'<div class="card">没有符合条件的医院</div>';
+let curFilter='all';
+function render(){
+  const q=($('#q').value||'').trim().toLowerCase();
+  const list=DATA.filter(h=>{
+    if(curFilter==='oral'&&h.tag!=='oral')return false;
+    if(curFilter==='care'&&h.tag==='oral')return false;
+    if(curFilter==='near'&&h.off>30)return false;
+    if(!q)return true;
+    const hay=(h.name+' '+h.addr+' '+h.depts.join(' ')+' '+h.note).toLowerCase();
+    return hay.indexOf(q)>=0;
+  });
+  $('#list').innerHTML=list.map(card).join('')||'<div class="card">没有匹配的医院，换个关键词试试</div>';
   bindCopy();
   bindActions();
 }
@@ -1470,9 +822,10 @@ function bindActions(){
 }
 document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
   document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
-  c.classList.add('on');render(c.dataset.f);
+  c.classList.add('on');curFilter=c.dataset.f;render();
 });
-render('all');
+$('#q').addEventListener('input',render);
+render();
 // map
 (function(){
   const el=$('#map');
