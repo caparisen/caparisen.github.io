@@ -40,6 +40,14 @@ footer{padding:0 16px 30px;color:var(--sub);font-size:12px;line-height:1.7}
 .leaflet-container{font:13px/1.4 -apple-system,"PingFang SC",sans-serif}
 .pin{width:30px;height:30px;border-radius:50%;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45)}
 .pin.both{background:#0a64d2}.pin.oral{background:#c82020}
+.ring-label{background:rgba(255,255,255,.9);color:#374151;font:600 11px/16px -apple-system,"PingFang SC",sans-serif;text-align:center;border-radius:9px;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.park-pin{display:flex;align-items:center;gap:4px}
+.park-pin .pd{flex:0 0 auto;width:15px;height:15px;border-radius:50%;background:#009444;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+.park-pin .pt{background:rgba(255,255,255,.94);color:#065f46;font:600 11px/16px -apple-system,"PingFang SC",sans-serif;padding:1px 6px;border-radius:9px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.legend{background:rgba(255,255,255,.94);border-radius:8px;padding:6px 9px;font:11px/18px -apple-system,"PingFang SC",sans-serif;color:#374151;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.legend i.lb{background:#0a64d2}.legend i.lr{background:#c82020}
+.legend i.ld{width:16px;height:0;border-top:2px dashed #4b5563;border-radius:0;vertical-align:3px}
 .pop b{font-size:14px}.pop a{color:#0a64d2}
 </style>
 </head>
@@ -777,11 +785,18 @@ render('all');
   if(typeof L==='undefined'){el.innerHTML='<div class="fallback">地图加载失败（网络受限），下方清单照常可用。</div>';return}
   const map=L.map(el,{zoomControl:true,scrollWheelZoom:false});
   L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:['1','2','3','4'],maxZoom:18,attribution:'高德地图'}).addTo(map);
-  L.circle(PARK,{radius:5000,color:'#6b7280',weight:1.5,opacity:.85,fill:false,dashArray:'5 5'}).addTo(map);
-  L.circle(PARK,{radius:10000,color:'#6b7280',weight:1.5,opacity:.85,fill:false,dashArray:'5 5'}).addTo(map);
-  L.circle(PARK,{radius:15000,color:'#6b7280',weight:1.5,opacity:.85,fill:false,dashArray:'5 5'}).addTo(map);
-  L.circleMarker(PARK,{radius:7,color:'#fff',weight:2,fillColor:'#009444',fillOpacity:1})
-    .addTo(map).bindPopup('<b>双和公园</b><br>圆心');
+  [5000,10000,15000].forEach(km=>{
+    L.circle(PARK,{radius:km,color:'#4b5563',weight:2,opacity:.95,fill:false,dashArray:'6 6'}).addTo(map);
+    L.marker([PARK[0]+km/111320,PARK[1]],{interactive:false,icon:L.divIcon({className:'',html:`<div class="ring-label">${km/1000} km</div>`,iconSize:[46,18],iconAnchor:[23,9]})}).addTo(map);
+  });
+  L.marker(PARK,{icon:L.divIcon({className:'',html:'<div class="park-pin"><span class="pd"></span><span class="pt">双和公园（圆心）</span></div>',iconSize:[170,26],iconAnchor:[14,13]})}).addTo(map).bindPopup('<b>双和公园</b><br>出发点');
+  const legend=L.control({position:'bottomleft'});
+  legend.onAdd=function(){
+    const d=L.DomUtil.create('div','legend');
+    d.innerHTML='<div><i class="lb"></i>儿保（含儿保+儿童口腔）</div><div><i class="lr"></i>儿童口腔科</div><div><i class="ld"></i>距双和公园 5 / 10 / 15 km</div>';
+    return d;
+  };
+  legend.addTo(map);
   const bounds=[PARK];
   DATA.forEach(h=>{
     const icon=L.divIcon({className:'',html:`<div class="pin ${h.tag}">${h.num}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
